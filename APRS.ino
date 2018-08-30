@@ -11,7 +11,10 @@
   #define DPRINTLN(...)   //now defines a blank line
 #endif
 
-#define TX_TIME_BETWEEN 2500
+#define TX_TIME_BETWEEN 30000
+#define TX_SPEED_DIFFERENCE 30
+
+#define TIME_SERIAL_GPS 1000
 
 #define RX_GPS 3
 #define TX_GPS 4
@@ -20,7 +23,9 @@
 
 TinyGPSPlus gps;
 SoftwareSerial serialGPS(RX_GPS, TX_GPS);
+
 unsigned long lastTx = 0;
+unsigned int lastSpeed = 0;
 
 char packetBuffer[255] = {'\0'};
 char floatString[16];
@@ -40,13 +45,12 @@ void setup() {
 }
 
 void loop()  {
-  if (millis() - lastTx >= TX_TIME_BETWEEN) {
-    if (getGPSData(1000)) {
-      
-      txToRadio();
+  if (getGPSData(TIME_SERIAL_GPS)) {
+    if (millis() - lastTx >= TX_TIME_BETWEEN || lastSpeed - gps.speed.meters() >= TX_SPEED_DIFFERENCE) {
+      if (txToRadio()) {
+        lastTx = millis();
+      }
     }
-
-    lastTx = millis();
   }
 
   delay(10);
@@ -127,7 +131,7 @@ void paddingf(float number, byte width, char *dest, char *tmpStr) {
   sprintf(dest, "%s%s", dest, tmpStr);
 }
 
-void txToRadio() {
+bool txToRadio() {
   DPRINTLN(F("TX ..."));
   float lat = gps.location.lat(), lng = gps.location.lng(), latDegMin = convertDegMin(lat), lngDegMin = convertDegMin(lng);
 
@@ -179,9 +183,7 @@ void txToRadio() {
 
   DPRINTLN(packetBuffer);
 
-  QAPRS.sendData(packetBuffer);
-  
-  DPRINTLN(F("TX OK"));
+  return QAPRS.sendData(packetBuffer) != QAPRSReturnOK;
 }
 
 

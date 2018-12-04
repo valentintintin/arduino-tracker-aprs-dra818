@@ -29,6 +29,7 @@
 #define TX_DRA 4
 #define DRA_ACTIVE 5
 #define LED_PIN 13
+#define ALWAYS_TX_PIN 7
 
 TinyGPSPlus gps;
 SoftwareSerial serialGPS(RX_GPS, 0);
@@ -45,6 +46,15 @@ const char CALL_ID = '9';
 const char TO_CALL[] = "CQ";
 const char TO_CALL_ID = '0';
 const char RELAYS[] = "WIDE1-1,WIDE2-1";
+
+void blink(byte nb) {
+	for (byte i = 0; i < nb + 1; i++) {
+		digitalWrite(HIGH);
+		delay(350);
+		digitalWrite(LOW);
+		delay(350);
+	}
+}
 
 void displayInfo() {
   DPRINT(F("Location: "));
@@ -265,14 +275,28 @@ void setup() {
     if (!(dra = DRA818::configure(&serialDRA, DRA818_VHF, TX_FREQ, TX_FREQ, 0, 0, 0,
                                   0, DRA818_12K5, false, false, false, &Serial))) {
       DPRINTLN(F("DRA ERROR"));
+      cligno(10);
     }
   } while(!dra);
 
+  digitalWrite(DRA_PTT, LOW);
+  delay(300);
+  digitalWrite(DRA_PTT, HIGH);
   DPRINTLN(F("DRA OK"));
   digitalWrite(DRA_ACTIVE, LOW);
 
   QAPRS.init(2, LED_PIN, CALL, CALL_ID, TO_CALL, TO_CALL_ID, RELAYS);
   DPRINTLN(F("Init OK"));
+  
+  while (digitalRead(ALWAYS_TX_PIN)) {
+	  bool qaprsOk = QAPRS.sendData("F4HVV / APRS Arduino / TEST PACKET TEXTE / BEACON 10 sec") == QAPRSReturnOK;
+	  if (qaprsOk) {
+	  	cligno(2);
+	  } else {
+	  	cligno(10);
+	  }
+	  delay(10000);
+  }
 }
 
 void loop() {
@@ -281,11 +305,14 @@ void loop() {
         lastSpeed - gps.speed.kmph() >= TX_SPEED_DIFFERENCE) {
       if (txToRadio()) {
         lastTx = millis();
+        cligno(2);
       }
     } else {
       DPRINT(F("Next:"));
       DPRINTLN(TX_TIME_BETWEEN - (millis() - lastTx));
     }
+  } else {
+  	cligno(5);
   }
 
   delay(1000);

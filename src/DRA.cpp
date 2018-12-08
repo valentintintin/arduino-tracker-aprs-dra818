@@ -2,7 +2,8 @@
 #include "Utils.h"
 
 DRA::DRA(byte rxDra, byte txDra, byte pttPin, byte activePin) :
-        pttPin(pttPin), activePin(activePin), dra(nullptr) {
+        pttPin(pttPin), activePin(activePin),
+        dra(nullptr), activeState(false), txState(false) {
     serial = new SoftwareSerial(rxDra, txDra);
     serial->begin(9600);
 
@@ -11,7 +12,6 @@ DRA::DRA(byte rxDra, byte txDra, byte pttPin, byte activePin) :
 }
 
 DRA::~DRA() {
-    delete serial;
     delete dra;
 }
 

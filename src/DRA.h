@@ -21,17 +21,16 @@ public:
     void stopTx(bool deactiveAfter = true);
 
     bool isTx();
-
     bool isActive();
 
-    DRA818 *dra = nullptr;
+    DRA818 *dra;
 
 private:
     void active();
 
     void deactive();
 
-    SoftwareSerial *serial = nullptr;
+    SoftwareSerial *serial;
 
     byte pttPin;
     byte activePin;

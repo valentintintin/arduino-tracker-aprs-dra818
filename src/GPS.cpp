@@ -7,7 +7,6 @@ GPS::GPS(byte rxPin, int baud, byte txPin) : baud(baud) {
 
 GPS::~GPS() {
     delete gps;
-    delete serial;
 }
 
 bool GPS::getData() {
@@ -16,7 +15,7 @@ bool GPS::getData() {
     serial->begin(baud);
     unsigned long start = millis();
     do {
-        while (serial.available()) gps->encode(serial.read());
+        while (serial->available()) gps->encode(serial->read());
     } while (millis() - start < TIME_WAIT_DATA);
     serial->flush();
     serial->end();

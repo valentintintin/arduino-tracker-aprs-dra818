@@ -1,15 +1,14 @@
 #include <Arduino.h>
-#include <ArduinoQAPRS.h>
 
 #include "Utils.h"
+#include "GPS.h"
+#include "DRA.h"
+#include "APRS.h"
 
-#define TX_TIME_BETWEEN 30000
+#define TX_TIME_BETWEEN 30
 #define TX_SPEED_DIFFERENCE 30
 #define TX_FREQ 144.800
-#define TX_ENABLE
 
-#define TIME_SERIAL_GPS 1000
-#define GPS_DRA_BAUD 9600
 #define APRS_COMMENT " TEST"
 
 #define DRA_PTT 2
@@ -19,8 +18,7 @@
 #define DRA_ACTIVE 5
 #define ALWAYS_TX_PIN 7
 
-unsigned long lastTx = 0;
-unsigned int lastSpeed = 0;
+char BEACON[] = "F4HVV / APRS Arduino / TEST PACKET TEXTE / BEACON 10 sec";
 
 const char CALL[] = "F4HVV";
 const char CALL_ID = '9';
@@ -28,39 +26,32 @@ const char TO_CALL[] = "CQ";
 const char TO_CALL_ID = '0';
 const char RELAYS[] = "WIDE1-1,WIDE2-1";
 
+GPS gps(RX_GPS);
+DRA dra(RX_DRA, TX_DRA, DRA_PTT, DRA_ACTIVE);
+APRS aprs(&dra, &gps, CALL, CALL_ID, TO_CALL, TO_CALL_ID, RELAYS, TX_TIME_BETWEEN, TX_SPEED_DIFFERENCE);
 
 void setup() {
-#ifdef DEBUG
-  Serial.begin(GPS_DRA_BAUD);
-#endif
-  DPRINTLN(F("Start ..."));
+    DPRINTLN(F("Starting ..."));
 
-  DPRINTLN(F("Init OK"));
+    aprs.setComment(APRS_COMMENT);
 
-  while (true || digitalRead(ALWAYS_TX_PIN)) {
-    DPRINTLN(F("RUN TEST LOOP"));
+    dra.init(TX_FREQ);
 
-#ifdef TX_ENABLE
-
-#endif
-
-    bool qaprsOk = QAPRS.sendData("F4HVV / APRS Arduino / TEST PACKET TEXTE / BEACON 10 sec") == QAPRSReturnOK;
-
-    DPRINT(F("Packet OK: "));
-    DPRINTLN(qaprsOk);
-
-
-
-	  if (qaprsOk) {
-        blink(2);
-	  } else {
-        blink(10);
-	  }
-	  delay(10000);
-  }
+    DPRINTLN(F("Started !"));
 }
 
 void loop() {
-
-  delay(1000);
+#ifdef TEST
+    DPRINTLN(F("Test ..."));
+    if (aprs.txToRadio(BEACON)) {
+        DPRINTLN(F("OK !"));
+        blink(2);
+    } else {
+        DPRINTLN(F("FAILED !"));
+        blink(10);
+    }
+#else
+    aprs.loop();
+#endif
+    delay(1000);
 }

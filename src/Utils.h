@@ -1,7 +1,6 @@
 #ifndef ARDUINO_TRACKER_APRS_DRA818_UTILS_H
 #define ARDUINO_TRACKER_APRS_DRA818_UTILS_H
 
-#define DEBUG
 #ifdef DEBUG
 #define DPRINT(...) Serial.print(__VA_ARGS__)
 #define DPRINTLN(...) \

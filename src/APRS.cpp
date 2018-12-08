@@ -19,12 +19,16 @@ bool APRS::txToRadio(char *packet) {
     dra->stopTx();
 
     if (qaprsOk) {
-        DPRINTLN(F("APRS OK"));
+        DPRINTLN(F("TX OK"));
     } else {
-        DPRINTLN(F("APRS FAILED"));
+        DPRINTLN(F("TX FAILED"));
     }
 
     return qaprsOk;
+}
+
+void APRS::setComment(const char *comment) {
+    this->comment = comment;
 }
 
 bool APRS::loop() {
@@ -34,13 +38,17 @@ bool APRS::loop() {
             if (sendPosition()) {
                 lastTx = millis();
                 blink(2);
+
+                return true;
             }
         } else {
             DPRINT(F("Next:"));
             DPRINTLN(timeBetweenTx - (millis() - lastTx));
         }
+        return false;
     } else {
         blink(5);
+        return false;
     }
 }
 
@@ -143,10 +151,10 @@ void APRS::buildPacket() {
     // Satelite
     strcat(packetBuffer, " Sat=");
     stringPadding((int) gps->gps->satellites.value(), 6, packetBuffer);
-// Comment
-#ifdef APRS_COMMENT
-    strcat(packetBuffer, APRS_COMMENT);
-#endif
+    // Comment
+    if (comment != nullptr && strlen(comment)) {
+        strcat(packetBuffer, comment);
+    }
 
     DPRINTLN(packetBuffer);
 }

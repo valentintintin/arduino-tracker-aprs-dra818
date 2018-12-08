@@ -12,16 +12,17 @@ public:
 
     bool loop();
 
+    void setComment(const char *comment);
     bool txToRadio(char *packet);
 
 private:
     DRA *dra = nullptr;
     GPS *gps = nullptr;
 
-    long lastTx = 0;
+    unsigned long lastTx = 0;
     byte lastSpeed = 0;
 
-    int timeBetweenTx;
+    unsigned int timeBetweenTx;
     byte speedDeltaTx;
 
     char packetBuffer[255] = {'\0'};
@@ -32,6 +33,8 @@ private:
     const char *toCall;
     char toCallId;
     const char *relays;
+
+    const char *comment = nullptr;
 
     long readVccAtmega();
 

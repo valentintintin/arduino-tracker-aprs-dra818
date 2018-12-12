@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.2)
-project(Arduino-APRS-Tracker-dra818v)
+project(arduino-tracker-aprs-dra818)
 
 include(CMakeListsPrivate.txt)
 
 add_custom_target(
     PLATFORMIO_BUILD ALL
-    COMMAND ${PLATFORMIO_CMD} -f -c clion run
+        COMMAND ${PLATFORMIO_CMD} -f -c clion run -e nanoprod
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_custom_target(
     PLATFORMIO_UPLOAD ALL
-    COMMAND ${PLATFORMIO_CMD} -f -c clion run --target upload
+        COMMAND ${PLATFORMIO_CMD} -f -c clion run --target upload -e nanoprod
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
@@ -51,4 +51,4 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_executable(${PROJECT_NAME} ${SRC_LIST})
+add_executable(${PROJECT_NAME} ${SRC_LIST} src/GPS.cpp src/GPS.h src/DRA.cpp src/DRA.h src/APRS.cpp src/APRS.h src/Utils.h src/Utils.cpp)

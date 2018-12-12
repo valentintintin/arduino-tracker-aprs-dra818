@@ -27,6 +27,14 @@ bool APRS::txToRadio(char *packet) {
     return qaprsOk;
 }
 
+void APRS::setSecondBetweenTx(unsigned int secondBetweenTx) {
+    this->timeBetweenTx = secondBetweenTx * 1000;
+}
+
+void APRS::setSpeedDeltaTx(byte speedDeltaTx) {
+    this->speedDeltaTx = speedDeltaTx;
+}
+
 void APRS::setComment(const char *comment) {
     this->comment = comment;
 }
@@ -34,7 +42,7 @@ void APRS::setComment(const char *comment) {
 bool APRS::loop() {
     if (gps->getData()) {
         if (millis() - lastTx >= timeBetweenTx ||
-            lastSpeed - gps->gps->speed.kmph() >= speedDeltaTx) {
+            lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx) {
             if (sendPosition()) {
                 lastTx = millis();
                 blink(2);
@@ -42,7 +50,7 @@ bool APRS::loop() {
                 return true;
             }
         } else {
-            DPRINT(F("Next:"));
+            DPRINT(F("Next :"));
             DPRINTLN(timeBetweenTx - (millis() - lastTx));
         }
         return false;
@@ -103,8 +111,8 @@ void APRS::stringPaddingf(float number, byte width, char *dest, char *tmpStr) {
 }
 
 void APRS::buildPacket() {
-    float lat = gps->gps->location.lat();
-    float lng = gps->gps->location.lng();
+    float lat = gps->gps.location.lat();
+    float lng = gps->gps.location.lng();
     float latDegMin = convertDegMin(lat);
     float lngDegMin = convertDegMin(lng);
 
@@ -138,19 +146,19 @@ void APRS::buildPacket() {
     strcat(packetBuffer, ">");
 
     // North orientation
-    stringPadding((int) gps->gps->course.deg(), 3, packetBuffer);
+    stringPadding((int) gps->gps.course.deg(), 3, packetBuffer);
     // Separator
     strcat(packetBuffer, "/");
     // Speed
-    stringPadding((int) gps->gps->speed.knots(), 3, packetBuffer);
+    stringPadding((int) gps->gps.speed.knots(), 3, packetBuffer);
     // Altitude
     strcat(packetBuffer, " /A=");
-    stringPadding((int) gps->gps->altitude.feet(), 6, packetBuffer);
+    stringPadding((int) gps->gps.altitude.feet(), 6, packetBuffer);
     // Voltage
     sprintf(packetBuffer, "%s V=%ld", packetBuffer, readVccAtmega());
     // Satelite
     strcat(packetBuffer, " Sat=");
-    stringPadding((int) gps->gps->satellites.value(), 6, packetBuffer);
+    stringPadding((int) gps->gps.satellites.value(), 6, packetBuffer);
     // Comment
     if (comment != nullptr && strlen(comment)) {
         strcat(packetBuffer, comment);
@@ -162,6 +170,5 @@ void APRS::buildPacket() {
 
 bool APRS::sendPosition() {
     buildPacket();
-//    return txToRadio(packetBuffer);
-    return true;
+    return txToRadio(packetBuffer);
 }

@@ -12,6 +12,9 @@ public:
 
     bool loop();
 
+    void setSecondBetweenTx(unsigned int secondBetweenTx);
+
+    void setSpeedDeltaTx(byte speedDeltaTx);
     void setComment(const char *comment);
     bool txToRadio(char *packet);
 

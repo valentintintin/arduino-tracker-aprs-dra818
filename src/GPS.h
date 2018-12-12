@@ -11,13 +11,11 @@ class GPS {
 public:
     explicit GPS(byte rxPin, int baud = 9600, byte txPin = 0);
 
-    virtual ~GPS();
-
     bool getData();
 
     void displayInfo();
 
-    TinyGPSPlus *gps;
+    TinyGPSPlus gps;
 private:
     SoftwareSerial *serial;
 

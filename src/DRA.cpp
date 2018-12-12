@@ -20,10 +20,10 @@ bool DRA::init(float freq, bool deactiveAfter, bool loop) {
     active();
 
     do {
-        DPRINTLN(F("DRA INIT ..."));
+        DPRINTLN(F("DRA Init ..."));
         if (!(dra = DRA818::configure(serial, DRA818_VHF, freq, freq, 0, 0, 0, 0, DRA818_12K5, false, false, false,
                                       &Serial))) {
-            DPRINTLN(F("DRA ERROR"));
+            DPRINTLN(F("DRA failed"));
             blink(15);
         }
     } while (dra == nullptr && loop);

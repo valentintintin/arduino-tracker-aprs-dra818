@@ -13,9 +13,13 @@ bool APRS::txToRadio(char *packet) {
     DPRINTLN(F("TX ..."));
 
     dra->tx();
+	
+	delay(500);
 
     bool qaprsOk = QAPRS.sendData(packet) == QAPRSReturnOK;
 
+	delay(500);
+	
     dra->stopTx();
 
     if (qaprsOk) {

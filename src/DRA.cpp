@@ -31,9 +31,9 @@ bool DRA::init(float freq, bool deactiveAfter, bool loop) {
     digitalWrite(pttPin, LOW);
     delay(TIME_TOGGLE_PTT);
     digitalWrite(pttPin, HIGH);
-    if (deactiveAfter) {
+    /*if (deactiveAfter) {
         deactive();
-    }
+    }*/
 
     DPRINTLN(F("DRA OK"));
 
@@ -41,9 +41,9 @@ bool DRA::init(float freq, bool deactiveAfter, bool loop) {
 }
 
 void DRA::tx() {
-    if (!activeState) {
+    /*if (!activeState) {
         active();
-    }
+    }*/
 
     digitalWrite(pttPin, LOW);
     delay(TIME_TOGGLE_PTT);
@@ -61,9 +61,9 @@ void DRA::stopTx(bool deactiveAfter) {
 
     txState = false;
 
-    if (deactiveAfter) {
+    /*if (deactiveAfter) {
         deactive();
-    }
+    }*/
 }
 
 bool DRA::isActive() {

@@ -5,7 +5,7 @@
 #include "DRA.h"
 #include "APRS.h"
 
-#define TX_TIME_BETWEEN 30
+#define TX_TIME_BETWEEN 1
 #define TX_SPEED_DIFFERENCE 30
 
 #ifndef TEST
@@ -32,8 +32,7 @@ char BEACON[] = APRS_COMMENT;
 
 GPS gps(RX_GPS);
 DRA dra(RX_DRA, TX_DRA, DRA_PTT, DRA_ACTIVE);
-APRS
-        aprs(&dra, &gps, CALL, CALL_ID, TO_CALL, TO_CALL_ID, RELAYS, TX_TIME_BETWEEN, TX_SPEED_DIFFERENCE);
+APRS aprs(&dra, &gps, CALL, CALL_ID, TO_CALL, TO_CALL_ID, RELAYS, TX_TIME_BETWEEN, TX_SPEED_DIFFERENCE);
 
 void setup() {
 #ifdef DEBUG
@@ -58,7 +57,7 @@ void loop() {
         DPRINTLN(F("FAILED !"));
         blink(10);
     }
-    delay(TX_TIME_BETWEEN - 1000);
+    delay(TX_TIME_BETWEEN * 1000);
 #else
     aprs.loop();
 #endif

@@ -3,10 +3,11 @@
 #include "Utils.h"
 
 APRS::APRS(DRA *dra, GPS *gps,
-           const char *call, char callId, const char *toCall, char toCallId, const char *relays,
+           char *call, char callId, char *toCall, char toCallId, char *relays,
            int secondBetweenTx, byte speedDeltaTx) :
-        dra(dra), gps(gps), timeBetweenTx(secondBetweenTx * 1000), speedDeltaTx(speedDeltaTx),
-        call(call), callId(callId), toCall(toCall), toCallId(toCallId), relays(relays) {
+        dra(dra), gps(gps), timeBetweenTx(secondBetweenTx * 1000), speedDeltaTx(speedDeltaTx) {
+	// Bug GPS
+	QAPRS.init(2, 13, call, callId, toCall, toCallId, relays);
 }
 
 bool APRS::txToRadio(char *packet) {

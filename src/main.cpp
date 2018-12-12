@@ -5,7 +5,7 @@
 #include "DRA.h"
 #include "APRS.h"
 
-#define TX_TIME_BETWEEN 1
+#define TX_TIME_BETWEEN 5
 #define TX_SPEED_DIFFERENCE 30
 
 #ifndef TEST
@@ -14,7 +14,7 @@
 #define TX_FREQ 144.600
 #endif
 
-#define APRS_COMMENT " TEST APRS Arduino EVERY 30s"
+#define APRS_COMMENT " TEST APRS Arduino"
 
 #define DRA_PTT 2
 #define RX_GPS 6
@@ -22,11 +22,11 @@
 #define TX_DRA 4
 #define DRA_ACTIVE 5
 
-const char CALL[] = "F4HVV";
-const char CALL_ID = '9';
-const char TO_CALL[] = "CQ";
-const char TO_CALL_ID = '0';
-const char RELAYS[] = "WIDE1-1,WIDE2-1";
+char CALL[] = "F4HVV";
+char CALL_ID = '9';
+char TO_CALL[] = "CQ";
+char TO_CALL_ID = '0';
+char RELAYS[] = "WIDE1-1,WIDE2-1";
 
 char BEACON[] = APRS_COMMENT;
 

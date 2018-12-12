@@ -18,6 +18,7 @@ bool GPS::getData() {
             gps.encode(r);
         }
     } while (millis() - start < TIME_WAIT_DATA);
+	DPRINTLN();
     serial->flush();
     serial->end();
 

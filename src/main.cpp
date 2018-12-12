@@ -7,18 +7,20 @@
 
 #define TX_TIME_BETWEEN 30
 #define TX_SPEED_DIFFERENCE 30
-#define TX_FREQ 144.800
 
-#define APRS_COMMENT " TEST"
+#ifndef TEST
+#define TX_FREQ 144.800
+#else
+#define TX_FREQ 144.600
+#endif
+
+#define APRS_COMMENT " TEST APRS Arduino EVERY 30s"
 
 #define DRA_PTT 2
 #define RX_GPS 6
 #define RX_DRA 3
 #define TX_DRA 4
 #define DRA_ACTIVE 5
-#define ALWAYS_TX_PIN 7
-
-char BEACON[] = "F4HVV / APRS Arduino / TEST PACKET TEXTE / BEACON 10 sec";
 
 const char CALL[] = "F4HVV";
 const char CALL_ID = '9';
@@ -26,11 +28,17 @@ const char TO_CALL[] = "CQ";
 const char TO_CALL_ID = '0';
 const char RELAYS[] = "WIDE1-1,WIDE2-1";
 
+char BEACON[] = APRS_COMMENT;
+
 GPS gps(RX_GPS);
 DRA dra(RX_DRA, TX_DRA, DRA_PTT, DRA_ACTIVE);
-APRS aprs(&dra, &gps, CALL, CALL_ID, TO_CALL, TO_CALL_ID, RELAYS, TX_TIME_BETWEEN, TX_SPEED_DIFFERENCE);
+APRS
+        aprs(&dra, &gps, CALL, CALL_ID, TO_CALL, TO_CALL_ID, RELAYS, TX_TIME_BETWEEN, TX_SPEED_DIFFERENCE);
 
 void setup() {
+#ifdef DEBUG
+    Serial.begin(9600);
+#endif
     DPRINTLN(F("Starting ..."));
 
     aprs.setComment(APRS_COMMENT);
@@ -50,6 +58,7 @@ void loop() {
         DPRINTLN(F("FAILED !"));
         blink(10);
     }
+    delay(TX_TIME_BETWEEN - 1000);
 #else
     aprs.loop();
 #endif

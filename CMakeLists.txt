@@ -5,13 +5,13 @@ include(CMakeListsPrivate.txt)
 
 add_custom_target(
     PLATFORMIO_BUILD ALL
-    COMMAND ${PLATFORMIO_CMD} -f -c clion run
+        COMMAND ${PLATFORMIO_CMD} -f -c clion run -e nanoprod
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_custom_target(
     PLATFORMIO_UPLOAD ALL
-    COMMAND ${PLATFORMIO_CMD} -f -c clion run --target upload
+        COMMAND ${PLATFORMIO_CMD} -f -c clion run --target upload -e nanoprod
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

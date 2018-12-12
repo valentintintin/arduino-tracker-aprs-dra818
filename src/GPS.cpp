@@ -20,6 +20,9 @@ bool GPS::getData() {
     serial->flush();
     serial->end();
 
+    DPRINT("GPS Char processed : ");
+    DPRINTLN(gps->charsProcessed());
+
     if (gps->charsProcessed() < 10) {
         DPRINTLN(F("GPS FAILED"));
         return false;
@@ -29,6 +32,9 @@ bool GPS::getData() {
         return false;
     }
     DPRINTLN(F("GPS OK"));
+#ifdef DEBUG
+    displayInfo();
+#endif
     return true;
 }
 

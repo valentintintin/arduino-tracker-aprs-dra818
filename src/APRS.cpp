@@ -156,10 +156,12 @@ void APRS::buildPacket() {
         strcat(packetBuffer, comment);
     }
 
+    DPRINT(F("Packet : "));
     DPRINTLN(packetBuffer);
 }
 
 bool APRS::sendPosition() {
     buildPacket();
-    return txToRadio(packetBuffer);
+//    return txToRadio(packetBuffer);
+    return true;
 }

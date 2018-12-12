@@ -2,25 +2,25 @@
 #include "APRS.h"
 #include "Utils.h"
 
-APRS::APRS(DRA *dra, GPS *gps,
-           char *call, char callId, char *toCall, char toCallId, char *relays,
-           int secondBetweenTx, byte speedDeltaTx) :
+APRS::APRS(DRA *dra, GPS *gps, unsigned int secondBetweenTx, byte speedDeltaTx) :
         dra(dra), gps(gps), timeBetweenTx(secondBetweenTx * 1000), speedDeltaTx(speedDeltaTx) {
-	// Bug GPS
-	QAPRS.init(2, 13, call, callId, toCall, toCallId, relays);
+}
+
+void APRS::init(char *call, uint8_t callId, char *toCall, uint8_t toCallId, char *relays) {
+    QAPRS.init(0, 0, call, callId, toCall, toCallId, relays);
 }
 
 bool APRS::txToRadio(char *packet) {
     DPRINTLN(F("TX ..."));
 
     dra->tx();
-	
-	delay(500);
+
+    delay(500);
 
     bool qaprsOk = QAPRS.sendData(packet) == QAPRSReturnOK;
 
-	delay(500);
-	
+    delay(500);
+
     dra->stopTx();
 
     if (qaprsOk) {
@@ -44,18 +44,17 @@ void APRS::setComment(const char *comment) {
     this->comment = comment;
 }
 
-bool APRS::loop() {
-    if (gps->getData()) {
+bool APRS::loop(bool test) {
+    if (gps->getData() || test) {
         if (millis() - lastTx >= timeBetweenTx ||
             lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx) {
             if (sendPosition()) {
                 lastTx = millis();
                 blink(2);
-
                 return true;
             }
         } else {
-            DPRINT(F("Next :"));
+            DPRINT(F("Next : "));
             DPRINTLN(timeBetweenTx - (millis() - lastTx));
         }
         return false;

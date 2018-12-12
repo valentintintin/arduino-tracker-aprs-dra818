@@ -7,10 +7,11 @@
 
 class APRS {
 public:
-    APRS(DRA *dra, GPS *gps, char *call, char callId, char *toCall, char toCallId,
-         char *relays, int secondBetweenTx, byte speedDeltaTx);
+    APRS(DRA *dra, GPS *gps, unsigned int secondBetweenTx, byte speedDeltaTx);
 
-    bool loop();
+    void init(char *call, uint8_t callId, char *toCall, uint8_t toCallId, char *relays);
+
+    bool loop(bool test = false);
 
     void setSecondBetweenTx(unsigned int secondBetweenTx);
 

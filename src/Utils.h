@@ -3,11 +3,16 @@
 
 #ifdef DEBUG
 #define DPRINT(...) Serial.print(__VA_ARGS__)
-#define DPRINTLN(...) \
-  Serial.println(__VA_ARGS__)
+#define DPRINTLN(...) Serial.println(__VA_ARGS__)
 #else
 #define DPRINT(...)
 #define DPRINTLN(...)
+#endif
+
+#ifdef TEST
+#define IS_TEST_MODE true
+#else
+#define IS_TEST_MODE false
 #endif
 
 void blink(byte nb);

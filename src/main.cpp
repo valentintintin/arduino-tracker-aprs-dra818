@@ -41,17 +41,17 @@ unsigned int lastSpeed = 0;
 
 char packetBuffer[255] = {'\0'};
 char floatString[16];
-const char CALL[] = "F4HVV";
-const char CALL_ID = '9';
-const char TO_CALL[] = "CQ";
-const char TO_CALL_ID = '0';
-const char RELAYS[] = "WIDE1-1,WIDE2-1";
+char CALL[] = "F4HVV";
+char CALL_ID = '9';
+char TO_CALL[] = "CQ";
+char TO_CALL_ID = '0';
+char RELAYS[] = "WIDE1-1,WIDE2-1";
 
 void blink(byte nb) {
 	for (byte i = 0; i < nb + 1; i++) {
-		digitalWrite(HIGH);
+		digitalWrite(13, HIGH);
 		delay(350);
-		digitalWrite(LOW);
+		digitalWrite(13, LOW);
 		delay(350);
 	}
 }
@@ -275,7 +275,7 @@ void setup() {
     if (!(dra = DRA818::configure(&serialDRA, DRA818_VHF, TX_FREQ, TX_FREQ, 0, 0, 0,
                                   0, DRA818_12K5, false, false, false, &Serial))) {
       DPRINTLN(F("DRA ERROR"));
-      cligno(10);
+      blink(10);
     }
   } while(!dra);
 
@@ -287,16 +287,16 @@ void setup() {
 
   QAPRS.init(2, LED_PIN, CALL, CALL_ID, TO_CALL, TO_CALL_ID, RELAYS);
   DPRINTLN(F("Init OK"));
-  
+  /*
   while (digitalRead(ALWAYS_TX_PIN)) {
 	  bool qaprsOk = QAPRS.sendData("F4HVV / APRS Arduino / TEST PACKET TEXTE / BEACON 10 sec") == QAPRSReturnOK;
 	  if (qaprsOk) {
-	  	cligno(2);
+	  	blink(2);
 	  } else {
-	  	cligno(10);
+	  	blink(10);
 	  }
 	  delay(10000);
-  }
+  }*/
 }
 
 void loop() {
@@ -305,14 +305,14 @@ void loop() {
         lastSpeed - gps.speed.kmph() >= TX_SPEED_DIFFERENCE) {
       if (txToRadio()) {
         lastTx = millis();
-        cligno(2);
+        blink(2);
       }
     } else {
       DPRINT(F("Next:"));
       DPRINTLN(TX_TIME_BETWEEN - (millis() - lastTx));
     }
   } else {
-  	cligno(5);
+  	blink(5);
   }
 
   delay(1000);

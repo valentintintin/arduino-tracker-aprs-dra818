@@ -13,7 +13,9 @@ void APRS::init(char *call, uint8_t callId, char *toCall, uint8_t toCallId, char
 bool APRS::txToRadio(char *packet) {
     DPRINTLN(F("TX ..."));
 
-    dra->tx();
+    if (dra->isDraDetected()) {
+        dra->tx();
+    }
 
     delay(500);
 
@@ -21,7 +23,9 @@ bool APRS::txToRadio(char *packet) {
 
     delay(500);
 
-    dra->stopTx();
+    if (dra->isDraDetected()) {
+        dra->stopTx();
+    }
 
     if (qaprsOk) {
         DPRINTLN(F("TX OK"));
@@ -46,8 +50,8 @@ void APRS::setComment(const char *comment) {
 
 bool APRS::loop(bool test) {
     if (gps->getData() || test) {
-        if (millis() - lastTx >= timeBetweenTx ||
-            lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx) {
+        //  || lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx
+        if (millis() - lastTx >= timeBetweenTx) {
             if (sendPosition()) {
                 lastTx = millis();
                 blink(2);
@@ -146,8 +150,13 @@ void APRS::buildPacket() {
         strcat(packetBuffer, "W");
     }
 
-    // Symbol car
-    strcat(packetBuffer, ">");
+    if (dra->isDraDetected()) {
+        // Symbol car
+        strcat(packetBuffer, ">");
+    } else {
+        // Symbol human
+        strcat(packetBuffer, "[");
+    }
 
     // North orientation
     stringPadding((int) gps->gps.course.deg(), 3, packetBuffer);
@@ -156,13 +165,15 @@ void APRS::buildPacket() {
     // Speed
     stringPadding((int) gps->gps.speed.knots(), 3, packetBuffer);
     // Altitude
-    strcat(packetBuffer, " /A=");
+    strcat(packetBuffer, "/A=");
     stringPadding((int) gps->gps.altitude.feet(), 6, packetBuffer);
+    // Accuracy
+    sprintf(packetBuffer, "%sHDOP=%lf", packetBuffer, gps->gps.hdop.hdop());
+    // Satellites
+    strcat(packetBuffer, " SATS");
+    stringPadding((int) gps->gps.satellites.value(), 2, packetBuffer);
     // Voltage
-    sprintf(packetBuffer, "%s V=%ld", packetBuffer, readVccAtmega());
-    // Satelite
-    strcat(packetBuffer, " Sat=");
-    stringPadding((int) gps->gps.satellites.value(), 6, packetBuffer);
+    sprintf(packetBuffer, "%s/V=%ld", packetBuffer, readVccAtmega());
     // Comment
     if (comment != nullptr && strlen(comment)) {
         strcat(packetBuffer, comment);

@@ -13,8 +13,8 @@
 #define APRS_COMMENT " TEST APRS Arduino"
 #else
 #define TX_FREQ 144.800
-#define TX_TIME_BETWEEN 900
-#define APRS_COMMENT " 73 de Valentin"
+#define TX_TIME_BETWEEN 60
+#define APRS_COMMENT " TEST APRS Arduino, Valentin"
 #endif
 
 #define DRA_PTT 2
@@ -52,7 +52,7 @@ void loop() {
     aprs.loop(IS_TEST_MODE);
 #ifdef TEST
     if (millis() > 900000) { // 15 minutes
-        aprs.setSecondBetweenTx(1800); // 30 minutes
+        aprs.setSecondBetweenTx(900); // 15 minutes
     }
 #endif
     delay(1000);

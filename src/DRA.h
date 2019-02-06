@@ -14,7 +14,7 @@ public:
 
     virtual ~DRA();
 
-    bool init(float txFreq = 144.800, bool deactiveAfter = true, bool loop = true);
+    bool init(float txFreq = 144.800, bool deactiveAfter = true, char loop = 3);
 
     void tx();
 
@@ -22,6 +22,8 @@ public:
 
     bool isTx();
     bool isActive();
+
+    bool isDraDetected();
 
     DRA818 *dra;
 

@@ -15,18 +15,20 @@ DRA::~DRA() {
     delete dra;
 }
 
-bool DRA::init(float freq, bool deactiveAfter, bool loop) {
+bool DRA::init(float freq, bool deactiveAfter, char loop) {
     digitalWrite(pttPin, HIGH);
     active();
 
+    char i = loop;
     do {
+        i--;
         DPRINTLN(F("DRA Init ..."));
         if (!(dra = DRA818::configure(serial, DRA818_VHF, freq, freq, 0, 0, 0, 0, DRA818_12K5, false, false, false,
                                       &Serial))) {
             DPRINTLN(F("DRA failed"));
             blink(15);
         }
-    } while (dra == nullptr && loop);
+    } while (dra == nullptr && i > 0);
 
     digitalWrite(pttPin, LOW);
     delay(TIME_TOGGLE_PTT);
@@ -37,7 +39,7 @@ bool DRA::init(float freq, bool deactiveAfter, bool loop) {
 
     DPRINTLN(F("DRA OK"));
 
-    return dra != nullptr;
+    return isDraDetected();
 }
 
 void DRA::tx() {
@@ -85,4 +87,8 @@ void DRA::deactive() {
     digitalWrite(activePin, LOW);
 
     activeState = false;
+}
+
+bool DRA::isDraDetected() {
+    return dra != nullptr;
 }

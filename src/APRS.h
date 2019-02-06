@@ -31,7 +31,6 @@ private:
 
     char packetBuffer[255] = {'\0'};
     char floatString[16] = {'\0'};
-
     const char *comment = nullptr;
 
     long readVccAtmega();

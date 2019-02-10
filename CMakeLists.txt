@@ -4,13 +4,26 @@ project(arduino-tracker-aprs-dra818)
 include(CMakeListsPrivate.txt)
 
 add_custom_target(
-    PLATFORMIO_BUILD ALL
+        PLATFORMIO_BUILD_PROD ALL
         COMMAND ${PLATFORMIO_CMD} -f -c clion run -e nanoprod
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_custom_target(
-    PLATFORMIO_UPLOAD ALL
+        PLATFORMIO_BUILD_TEST ALL
+        COMMAND ${PLATFORMIO_CMD} -f -c clion run -e nanotest
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_custom_target(
+        PLATFORMIO_UPLOAD_TEST ALL
+        COMMAND ${PLATFORMIO_CMD} -f -c clion run --target upload -e nanotest
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+
+add_custom_target(
+        PLATFORMIO_UPLOAD_PROD ALL
         COMMAND ${PLATFORMIO_CMD} -f -c clion run --target upload -e nanoprod
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )

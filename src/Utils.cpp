@@ -1,12 +1,10 @@
 #include <Arduino.h>
 
-#define LED_PIN 13
-
 void blink(byte nb) {
     for (byte i = 0; i < nb; i++) {
-        digitalWrite(LED_PIN, HIGH);
+        digitalWrite(LED_BUILTIN, HIGH);
         delay(250);
-        digitalWrite(LED_PIN, LOW);
+        digitalWrite(LED_BUILTIN, LOW);
         delay(250);
     }
 }

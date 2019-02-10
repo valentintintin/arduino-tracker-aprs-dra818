@@ -14,7 +14,7 @@ public:
 
     virtual ~DRA();
 
-    bool init(float txFreq = 144.800, bool deactiveAfter = true, char loop = 3);
+    bool init(float txFreq = 144.800, bool deactiveAfter = true, char loop = 1);
 
     void tx();
 

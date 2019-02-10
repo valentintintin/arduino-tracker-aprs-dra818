@@ -30,42 +30,51 @@ bool DRA::init(float freq, bool deactiveAfter, char loop) {
         }
     } while (dra == nullptr && i > 0);
 
-    digitalWrite(pttPin, LOW);
-    delay(TIME_TOGGLE_PTT);
-    digitalWrite(pttPin, HIGH);
-    /*if (deactiveAfter) {
-        deactive();
-    }*/
+    if (isDraDetected()) {
+        digitalWrite(pttPin, LOW);
+        delay(TIME_TOGGLE_PTT);
+        digitalWrite(pttPin, HIGH);
+        /*if (deactiveAfter) {
+            deactive();
+        }*/
 
-    DPRINTLN(F("DRA OK"));
+        DPRINTLN(F("DRA OK"));
 
-    return isDraDetected();
+        return true;
+    }
+
+    DPRINTLN(F("No DRA"));
+
+    return false;
 }
 
 void DRA::tx() {
-    /*if (!activeState) {
-        active();
-    }*/
+    if (isDraDetected()) {
+        /*if (!activeState) {
+            active();
+        }*/
 
-    digitalWrite(pttPin, LOW);
-    delay(TIME_TOGGLE_PTT);
+        digitalWrite(pttPin, LOW);
+        delay(TIME_TOGGLE_PTT);
 
-    txState = true;
-
-    DPRINTLN(F("DRA TX"));
+        txState = true;
+        DPRINTLN(F("DRA TX"));
+    }
 }
 
 void DRA::stopTx(bool deactiveAfter) {
-    delay(100);
+    if (isDraDetected()) {
+        delay(100);
 
-    digitalWrite(pttPin, HIGH);
-    delay(TIME_TOGGLE_PTT);
+        digitalWrite(pttPin, HIGH);
+        delay(TIME_TOGGLE_PTT);
 
-    txState = false;
+        txState = false;
 
-    /*if (deactiveAfter) {
-        deactive();
-    }*/
+        /*if (deactiveAfter) {
+            deactive();
+        }*/
+    }
 }
 
 bool DRA::isActive() {

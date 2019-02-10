@@ -2,8 +2,9 @@
 #include "APRS.h"
 #include "Utils.h"
 
-APRS::APRS(DRA *dra, GPS *gps, unsigned int secondBetweenTx, byte speedDeltaTx) :
-        dra(dra), gps(gps), timeBetweenTx(secondBetweenTx * 1000), speedDeltaTx(speedDeltaTx) {
+APRS::APRS(DRA *dra, GPS *gps, unsigned int secondBetweenTx, double speedDeltaTx, uint8_t txPin) :
+        dra(dra), gps(gps), timeBetweenTx(secondBetweenTx * 1000), speedDeltaTx(speedDeltaTx), txPin(txPin) {
+    pinMode(txPin, OUTPUT);
 }
 
 void APRS::init(char *call, uint8_t callId, char *toCall, uint8_t toCallId, char *relays) {
@@ -13,7 +14,11 @@ void APRS::init(char *call, uint8_t callId, char *toCall, uint8_t toCallId, char
 bool APRS::txToRadio(char *packet) {
     DPRINTLN(F("TX ..."));
 
-    if (dra->isDraDetected()) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    if (!dra->isDraDetected()) {
+        digitalWrite(txPin, HIGH);
+        delay(TIME_TOGGLE_PTT);
+    } else {
         dra->tx();
     }
 
@@ -23,7 +28,11 @@ bool APRS::txToRadio(char *packet) {
 
     delay(500);
 
-    if (dra->isDraDetected()) {
+    digitalWrite(LED_BUILTIN, LOW);
+    if (!dra->isDraDetected()) {
+        digitalWrite(txPin, LOW);
+        delay(TIME_TOGGLE_PTT);
+    } else {
         dra->stopTx();
     }
 
@@ -40,7 +49,7 @@ void APRS::setSecondBetweenTx(unsigned int secondBetweenTx) {
     this->timeBetweenTx = secondBetweenTx * 1000;
 }
 
-void APRS::setSpeedDeltaTx(byte speedDeltaTx) {
+void APRS::setSpeedDeltaTx(double speedDeltaTx) {
     this->speedDeltaTx = speedDeltaTx;
 }
 
@@ -50,11 +59,11 @@ void APRS::setComment(const char *comment) {
 
 bool APRS::loop(bool test) {
     if (gps->getData() || test) {
-        //  || lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx
-        if (millis() - lastTx >= timeBetweenTx) {
+        if (millis() - lastTx >= timeBetweenTx || lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx) {
             if (sendPosition()) {
-                lastTx = millis();
                 blink(2);
+                lastSpeed = gps->gps.speed.kmph();
+                lastTx = millis();
                 return true;
             }
         } else {
@@ -167,13 +176,13 @@ void APRS::buildPacket() {
     // Altitude
     strcat(packetBuffer, "/A=");
     stringPadding((int) gps->gps.altitude.feet(), 6, packetBuffer);
+    // Voltage
+    sprintf(packetBuffer, "%s/V=%.1f", packetBuffer, readVccAtmega() / 1000.f);
     // Accuracy
-    sprintf(packetBuffer, "%sHDOP=%lf", packetBuffer, gps->gps.hdop.hdop());
+    sprintf(packetBuffer, "%s HDOP=%lf", packetBuffer, gps->gps.hdop.hdop());
     // Satellites
     strcat(packetBuffer, " SATS");
     stringPadding((int) gps->gps.satellites.value(), 2, packetBuffer);
-    // Voltage
-    sprintf(packetBuffer, "%s/V=%ld", packetBuffer, readVccAtmega());
     // Comment
     if (comment != nullptr && strlen(comment)) {
         strcat(packetBuffer, comment);

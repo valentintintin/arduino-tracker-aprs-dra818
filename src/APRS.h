@@ -16,8 +16,10 @@ public:
     void setSecondBetweenTx(unsigned int secondBetweenTx);
 
     void setSpeedDeltaTx(double speedDeltaTx);
-    void setComment(const char *comment);
-    bool txToRadio(char *packet);
+
+    void setComment(String comment);
+
+    bool txToRadio(String packet);
 
     bool sendPosition();
 
@@ -29,21 +31,18 @@ private:
     double lastSpeed = 0;
     uint8_t txPin = 0;
 
-    unsigned int timeBetweenTx;
-    double speedDeltaTx;
+    unsigned int timeBetweenTx = 0;
+    double speedDeltaTx = 0;
 
-    char packetBuffer[255] = {'\0'};
-    char floatString[16] = {'\0'};
-    const char *comment = nullptr;
+    String packetBuffer;
+    String comment;
 
     long readVccAtmega();
-
     float convertDegMin(float decDeg);
 
-    void stringPadding(int number, byte width, char *dest);
+    void stringPadding(int number, byte width, String *dest);
 
-    void stringPaddingf(float number, byte width, char *dest, char *tmpStr);
-
+    void stringPaddingf(float number, byte width, String *dest);
     void buildPacket();
 };
 

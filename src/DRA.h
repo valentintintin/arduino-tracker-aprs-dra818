@@ -34,11 +34,11 @@ private:
 
     SoftwareSerial *serial;
 
-    byte pttPin;
-    byte activePin;
+    byte pttPin = 0;
+    byte activePin = 0;
 
-    bool activeState;
-    bool txState;
+    bool activeState = false;
+    bool txState = false;
 };
 
 

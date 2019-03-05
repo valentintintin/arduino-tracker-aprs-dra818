@@ -10,7 +10,7 @@
 #ifdef TEST
 #define TX_TIME_BETWEEN 10
 #define TX_FREQ 144.600
-#define APRS_COMMENT " TEST https://frama.link/arduino-aprs"
+#define APRS_COMMENT " MODE TEST https://frama.link/arduino-aprs"
 #else
 #define TX_FREQ 144.800
 #define TX_TIME_BETWEEN 60

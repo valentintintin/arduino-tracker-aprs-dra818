@@ -5,13 +5,14 @@
 APRS::APRS(DRA *dra, GPS *gps, unsigned int secondBetweenTx, double speedDeltaTx, uint8_t txPin) :
         dra(dra), gps(gps), timeBetweenTx(secondBetweenTx * 1000), speedDeltaTx(speedDeltaTx), txPin(txPin) {
     pinMode(txPin, OUTPUT);
+    packetBuffer.reserve(255);
 }
 
 void APRS::init(char *call, uint8_t callId, char *toCall, uint8_t toCallId, char *relays) {
     QAPRS.init(0, 0, call, callId, toCall, toCallId, relays);
 }
 
-bool APRS::txToRadio(char *packet) {
+bool APRS::txToRadio(String packet) {
     DPRINTLN(F("TX ..."));
 
     digitalWrite(LED_BUILTIN, HIGH);
@@ -24,7 +25,7 @@ bool APRS::txToRadio(char *packet) {
 
     delay(500);
 
-    bool qaprsOk = QAPRS.sendData(packet) == QAPRSReturnOK;
+    bool qaprsOk = QAPRS.sendData((char *) packet.c_str()) == QAPRSReturnOK;
 
     delay(500);
 
@@ -53,7 +54,7 @@ void APRS::setSpeedDeltaTx(double speedDeltaTx) {
     this->speedDeltaTx = speedDeltaTx;
 }
 
-void APRS::setComment(const char *comment) {
+void APRS::setComment(String comment) {
     this->comment = comment;
 }
 
@@ -100,31 +101,28 @@ float APRS::convertDegMin(float decDeg) {
     return DegMin;
 }
 
-void APRS::stringPadding(int number, byte width, char *dest) {
+void APRS::stringPadding(int number, byte width, String *dest) {
     int temp = number;
     if (!temp) {
         temp++;
     }
 
     for (int i = 0; i < width - (log10(temp)) - 1; i++) {
-        strcat(dest, "0");
+        dest->concat('0');
     }
-    sprintf(dest, "%s%d", dest, number);
+    dest->concat(number);
 }
 
-void APRS::stringPaddingf(float number, byte width, char *dest, char *tmpStr) {
+void APRS::stringPaddingf(float number, byte width, String *dest) {
     float temp = number;
     if (!temp) {
         temp++;
     }
 
-    tmpStr[0] = '\0';
-
     for (int i = 0; i < width - (log10(temp)) - 1; i++) {
-        strcat(dest, "0");
+        dest->concat('0');
     }
-    dtostrf(number, strlen(tmpStr), 2, tmpStr);
-    sprintf(dest, "%s%s", dest, tmpStr);
+    dest->concat(number);
 }
 
 void APRS::buildPacket() {
@@ -133,59 +131,58 @@ void APRS::buildPacket() {
     float latDegMin = convertDegMin(lat);
     float lngDegMin = convertDegMin(lng);
 
-    packetBuffer[0] = '\0';
+    packetBuffer.remove(0, packetBuffer.length());
 
     // Start coordinates
-    strcat(packetBuffer, "!");
+    packetBuffer += '!';
 
     // Latitude
-    stringPaddingf(latDegMin, 4, packetBuffer, floatString);
+    stringPaddingf(latDegMin, 4, &packetBuffer);
     // Determine N or S
     if (latDegMin >= 0) {
-        strcat(packetBuffer, "N");
+        packetBuffer += 'N';
     } else if (latDegMin < 0) {
-        strcat(packetBuffer, "S");
+        packetBuffer += 'N';
     }
 
     // Separator
-    strcat(packetBuffer, "/");
+    packetBuffer += '/';
 
     // Longitude
-    stringPaddingf(lngDegMin, 5, packetBuffer, floatString);
+    stringPaddingf(lngDegMin, 5, &packetBuffer);
     // Determine E or W
     if (lngDegMin >= 0) {
-        strcat(packetBuffer, "E");
+        packetBuffer += 'E';
     } else if (lngDegMin < 0) {
-        strcat(packetBuffer, "W");
+        packetBuffer += 'W';
     }
 
     if (dra->isDraDetected()) {
         // Symbol car
-        strcat(packetBuffer, ">");
+        packetBuffer += '>';
     } else {
         // Symbol human
-        strcat(packetBuffer, "[");
+        packetBuffer += '[';
     }
 
     // North orientation
-    stringPadding((int) gps->gps.course.deg(), 3, packetBuffer);
+    stringPadding((int) gps->gps.course.deg(), 3, &packetBuffer);
     // Separator
-    strcat(packetBuffer, "/");
+    packetBuffer += '/';
     // Speed
-    stringPadding((int) gps->gps.speed.knots(), 3, packetBuffer);
+    stringPadding((int) gps->gps.speed.knots(), 3, &packetBuffer);
     // Altitude
-    strcat(packetBuffer, "/A=");
-    stringPadding((int) gps->gps.altitude.feet(), 6, packetBuffer);
+    packetBuffer += "/A=";
+    stringPadding((int) gps->gps.altitude.feet(), 6, &packetBuffer);
     // Voltage
-    sprintf(packetBuffer, "%s/V=%.1f", packetBuffer, readVccAtmega() / 1000.f);
+    packetBuffer += "/V=";
+    packetBuffer += readVccAtmega() / 1000.f;
     // Accuracy
-    sprintf(packetBuffer, "%s HDOP=%lf", packetBuffer, gps->gps.hdop.hdop());
-    // Satellites
-    strcat(packetBuffer, " SATS");
-    stringPadding((int) gps->gps.satellites.value(), 2, packetBuffer);
+    packetBuffer += " HDOP=";
+    packetBuffer += gps->gps.hdop.hdop();
     // Comment
-    if (comment != nullptr && strlen(comment)) {
-        strcat(packetBuffer, comment);
+    if (comment.length()) {
+        packetBuffer += comment;
     }
 
     DPRINT(F("Packet : "));

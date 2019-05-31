@@ -1,9 +1,13 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "hicpp-signed-bitwise"
 #include <ArduinoQAPRS.h>
 #include "APRS.h"
 #include "Utils.h"
 
-APRS::APRS(DRA *dra, GPS *gps, unsigned int secondBetweenTx, double speedDeltaTx, uint8_t txPin) :
-        dra(dra), gps(gps), timeBetweenTx(secondBetweenTx * 1000), speedDeltaTx(speedDeltaTx), txPin(txPin) {
+APRS::APRS(DRA *dra, GPS *gps, uint8_t secondBetweenTx, double speedDeltaTx, uint8_t locationMeterDeltaTx,
+           uint8_t txPin) :
+        dra(dra), gps(gps), timeBetweenTx(secondBetweenTx * 1000), speedDeltaTx(speedDeltaTx),
+        locationDeltaTx(locationMeterDeltaTx), txPin(txPin) {
     pinMode(txPin, OUTPUT);
     packetBuffer.reserve(255);
 }
@@ -46,12 +50,16 @@ bool APRS::txToRadio(String packet) {
     return qaprsOk;
 }
 
-void APRS::setSecondBetweenTx(unsigned int secondBetweenTx) {
-    this->timeBetweenTx = secondBetweenTx * 1000;
+void APRS::setTimeBetweenTx(uint8_t timeBetweenTx) {
+    this->timeBetweenTx = timeBetweenTx * 1000;
 }
 
 void APRS::setSpeedDeltaTx(double speedDeltaTx) {
     this->speedDeltaTx = speedDeltaTx;
+}
+
+void APRS::setLocationDeltaTx(double localtionDeltaTx) {
+    this->locationDeltaTx = localtionDeltaTx;
 }
 
 void APRS::setComment(String comment) {
@@ -60,10 +68,19 @@ void APRS::setComment(String comment) {
 
 bool APRS::loop(bool test) {
     if (gps->getData() || test) {
-        if (millis() - lastTx >= timeBetweenTx || lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx) {
+        if (
+                lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx ||
+                millis() - lastTx >= timeBetweenTx ||
+                gps->gps.distanceBetween(lastLat, lastLng, gps->gps.location.lat(), gps->gps.location.lng()) >=
+                locationDeltaTx ||
+                nbSent < 3
+                ) {
             if (sendPosition()) {
                 blink(2);
+                nbSent++;
                 lastSpeed = gps->gps.speed.kmph();
+                lastLat = gps->gps.location.lat();
+                lastLng = gps->gps.location.lng();
                 lastTx = millis();
                 return true;
             }
@@ -115,11 +132,11 @@ void APRS::stringPadding(int number, byte width, String *dest) {
 
 void APRS::stringPaddingf(float number, byte width, String *dest) {
     float temp = number;
-    if (!temp) {
+    if (!temp) { // NOLINT(bugprone-narrowing-conversions)
         temp++;
     }
 
-    for (int i = 0; i < width - (log10(temp)) - 1; i++) {
+    for (int i = 0; i < width - (log10(temp)) - 1; i++) { // NOLINT(performance-type-promotion-in-math-fn)
         dest->concat('0');
     }
     dest->concat(number);
@@ -193,3 +210,5 @@ bool APRS::sendPosition() {
     buildPacket();
     return txToRadio(packetBuffer);
 }
+
+#pragma clang diagnostic pop

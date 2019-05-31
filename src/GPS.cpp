@@ -10,7 +10,7 @@ bool GPS::getData() {
 
     serial->begin(baud);
     DPRINTLN(F("GPS received : "));
-    unsigned long start = millis();
+    uint32_t start = millis();
     do {
         while (serial->available()) {
             char r = serial->read();

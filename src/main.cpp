@@ -6,14 +6,15 @@
 #include "APRS.h"
 
 #define TX_SPEED_DIFFERENCE 30.0
+#define TX_LOCATION_DIFFERENCE 250
 
 #ifdef TEST
 #define TX_TIME_BETWEEN 10
 #define TX_FREQ 144.600
-#define APRS_COMMENT " MODE TEST https://frama.link/arduino-aprs"
+#define APRS_COMMENT " MODE TEST 144.600 Mhz"
 #else
 #define TX_FREQ 144.800
-#define TX_TIME_BETWEEN 60
+#define TX_TIME_BETWEEN 300
 #define APRS_COMMENT " https://frama.link/arduino-aprs"
 #endif
 
@@ -35,7 +36,7 @@ bool isTestMode = IS_TEST_MODE;
 
 GPS gps(RX_GPS);
 DRA dra(RX_DRA, TX_DRA, DRA_PTT, DRA_ACTIVE);
-APRS aprs(&dra, &gps, TX_TIME_BETWEEN, TX_SPEED_DIFFERENCE, PTT_OUT);
+APRS aprs(&dra, &gps, TX_TIME_BETWEEN, TX_SPEED_DIFFERENCE, TX_LOCATION_DIFFERENCE, PTT_OUT);
 
 void setup() {
 //    pinMode(BUTTON, INPUT_PULLUP);

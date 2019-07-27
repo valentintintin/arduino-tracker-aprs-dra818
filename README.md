@@ -40,6 +40,12 @@ To accomplish that it has 3 ways :
 *The sound (AX25) is always present on the jack connector and on Baofeng header pins. We don't have to use multiple options at the same time because sound "intensity" will decrease.*
 2. If the GPS is locked AND (time is over OR speed is over 30 Km/H OR (location is accurate AND location difference is more than 250 meters) ==> send the new location.
 
+### Photos
+
+| | | |
+|:-------------------------:|:-------------------------:|:-------------------------:|
+|<img width="1604" alt="Arduino circuit" src="arduino.jpg">  |  <img width="1604" alt="DRA818V circuit" src="dra.jpg">|<img width="1604" alt="Arduino and DRA818 circuit back" src="arduino-dra.jpg">
+
 ## The author
 
 My name is Valentin and my callsign is F4HVV.

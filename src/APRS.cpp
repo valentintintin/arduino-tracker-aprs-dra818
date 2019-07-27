@@ -71,23 +71,25 @@ bool APRS::loop(bool test) {
         if (
                 lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx ||
                 millis() - lastTx >= timeBetweenTx ||
-                gps->gps.distanceBetween(lastLat, lastLng, gps->gps.location.lat(), gps->gps.location.lng()) >=
-                locationDeltaTx ||
-                nbSent < 3
+                (gps->gps.hdop.hdop() <= 3 &&
+                 TinyGPSPlus::distanceBetween(lastLat, lastLng, gps->gps.location.lat(), gps->gps.location.lng()) >=
+                 locationDeltaTx) ||
                 ) {
             if (sendPosition()) {
                 blink(2);
-                nbSent++;
                 lastSpeed = gps->gps.speed.kmph();
                 lastLat = gps->gps.location.lat();
                 lastLng = gps->gps.location.lng();
                 lastTx = millis();
                 return true;
             }
-        } else {
+        }
+#ifdef DEBUG
+        else {
             DPRINT(F("Next : "));
             DPRINTLN(timeBetweenTx - (millis() - lastTx));
         }
+#endif
         return false;
     } else {
         blink(5);

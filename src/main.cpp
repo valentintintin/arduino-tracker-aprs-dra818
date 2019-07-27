@@ -5,8 +5,8 @@
 #include "DRA.h"
 #include "APRS.h"
 
-#define TX_SPEED_DIFFERENCE 30.0
-#define TX_LOCATION_DIFFERENCE 250
+#define TX_SPEED_DIFFERENCE 30.0 // km/h
+#define TX_LOCATION_DIFFERENCE 250 // m
 
 #ifdef TEST
 #define TX_TIME_BETWEEN 10
@@ -14,7 +14,7 @@
 #define APRS_COMMENT " MODE TEST 144.600 Mhz"
 #else
 #define TX_FREQ 144.800
-#define TX_TIME_BETWEEN 300
+#define TX_TIME_BETWEEN 300 // 5 minutes
 #define APRS_COMMENT " https://frama.link/arduino-aprs"
 #endif
 
@@ -70,7 +70,7 @@ void loop() {
     aprs.loop(isTestMode);
 #ifdef TEST
     if (millis() > 900000) { // 15 minutes
-        aprs.setSecondBetweenTx(900); // 15 minutes
+        aprs.setTimeBetweenTx(900); // 15 minutes
     }
 #endif
     delay(1000);

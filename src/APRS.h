@@ -33,7 +33,6 @@ private:
     double lastSpeed = 0;
     double lastLat = 0;
     double lastLng = 0;
-    uint32_t nbSent = 0;
 
 
     uint8_t txPin = 0;

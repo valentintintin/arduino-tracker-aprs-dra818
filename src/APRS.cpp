@@ -73,7 +73,7 @@ bool APRS::loop(bool test) {
                 millis() - lastTx >= timeBetweenTx ||
                 (gps->gps.hdop.hdop() <= 3 &&
                  TinyGPSPlus::distanceBetween(lastLat, lastLng, gps->gps.location.lat(), gps->gps.location.lng()) >=
-                 locationDeltaTx) ||
+                 locationDeltaTx)
                 ) {
             if (sendPosition()) {
                 blink(2);

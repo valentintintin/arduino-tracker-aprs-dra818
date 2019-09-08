@@ -69,11 +69,12 @@ void APRS::setComment(String comment) {
 bool APRS::loop(bool test) {
     if (gps->getData() || test) {
         if (
-                lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx ||
-                millis() - lastTx >= timeBetweenTx ||
-                (gps->gps.hdop.hdop() <= 3 &&
-                 TinyGPSPlus::distanceBetween(lastLat, lastLng, gps->gps.location.lat(), gps->gps.location.lng()) >=
-                 locationDeltaTx)
+//             FIXME Issue #3 loop
+//              lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx ||
+//                (gps->gps.hdop.hdop() <= 3 &&
+//                 TinyGPSPlus::distanceBetween(lastLat, lastLng, gps->gps.location.lat(), gps->gps.location.lng()) >=
+//                 locationDeltaTx)
+                millis() - lastTx >= timeBetweenTx
                 ) {
             if (sendPosition()) {
                 blink(2);

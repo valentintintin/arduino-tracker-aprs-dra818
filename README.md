@@ -17,7 +17,7 @@ Inspiration : https://github.com/Toni43/MiniSmartTracker
 
 ### The circuit
 
-![The circuit](circuit.png "The circuit")
+![The circuit](.github/circuit.png "The circuit")
 
 ### The Arduino program
 
@@ -27,12 +27,23 @@ To accomplish that it has 3 ways :
 - With a Baofeng UV5-R/UVB5 etc connected to the board
 - With an external TX by the jack connector
 
-#### Note
+### Compile and run
 
-1. The QAPRS lib use a **R2R resistor network** to generate the sound signal. You have to uncomment `APRS_HW_TYPE_R2R` and comment the others in `ArduinoQAPRS.h` if you want to compile. 
-2. If you want to use only PWM pin you can do it with (look at this : https://github.com/handiko/Arduino-APRS#afsk-bit-banging). You'll have to implement the ax25 protocol. PR welcome :)
-3. There are many board for DRA818  ([by Handiko](https://github.com/handiko/Dorji-TX-Shield), [by SV1AFN](https://www.sv1afn.com/dra818.html), [by HamShop.cz](https://www.hamshop.cz/avr-arduino-raspberry-pi-c16/vhf-transceiver-module-134174mhz-1w-dra818v-i266/)).
-4. In boards, Low Pass filter is not always included, **it's recommended to add one** :)
+I use PlatformIO insted of the Arduino IDE.
+
+1. Install [PlatformIO](https://docs.platformio.org/en/latest/installation.html)
+2. Run `git clone https://github.com/valentintintin/arduino-tracker-aprs-dra818.git && cd arduino-tracker-aprs-dra818`
+3. You have to uncomment `APRS_HW_TYPE_R2R` and comment all the others in `.piolibdeps/ArduinoQAPRS/ArduinoQAPRS.h`
+4. Plug your Arduino nano
+5. Run `pio run --target upload -e nanoprod`
+
+##### Notes
+
+- There are 2 environments : `nanoprod` without any logs, `nanotest` or with log and APRS sended every time even if no GPS locked.
+- The QAPRS lib use a **R2R resistor network** to generate the sound signal. 
+- If you want to use only PWM pin you can do it with (look at this : https://github.com/handiko/Arduino-APRS#afsk-bit-banging). You'll have to implement the ax25 protocol. PR welcome :)
+- There are many board for DRA818  ([by Handiko](https://github.com/handiko/Dorji-TX-Shield), [by SV1AFN](https://www.sv1afn.com/dra818.html), [by HamShop.cz](https://www.hamshop.cz/avr-arduino-raspberry-pi-c16/vhf-transceiver-module-134174mhz-1w-dra818v-i266/)).
+- In boards, Low Pass filter is not always included, **it's recommended to add one** :)
 
 #### Program flow
 
@@ -44,7 +55,7 @@ To accomplish that it has 3 ways :
 
 | | | |
 |:-------------------------:|:-------------------------:|:-------------------------:|
-|<img width="1604" alt="Arduino circuit" src="arduino.jpg">  |  <img width="1604" alt="DRA818V circuit" src="dra.jpg">|<img width="1604" alt="Arduino and DRA818 circuit back" src="arduino-dra.jpg">
+|<img width="1604" alt="Arduino circuit" src=".github/arduino.jpg">  |  <img width="1604" alt="DRA818V circuit" src=".github/dra.jpg">|<img width="1604" alt="Arduino and DRA818 circuit back" src=".github/arduino-dra.jpg">
 
 ## The author
 

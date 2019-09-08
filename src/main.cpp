@@ -7,6 +7,7 @@
 
 #define TX_SPEED_DIFFERENCE 30.0 // km/h
 #define TX_LOCATION_DIFFERENCE 250 // m
+#define TX_TIME_BETWEEN_NO_DRA 300 // 5 minutes
 
 #ifdef TEST
 #define TX_TIME_BETWEEN 10
@@ -14,7 +15,7 @@
 #define APRS_COMMENT " MODE TEST 144.600 Mhz"
 #else
 #define TX_FREQ 144.800
-#define TX_TIME_BETWEEN 300 // 5 minutes
+#define TX_TIME_BETWEEN 90 // 1 minutes 30
 #define APRS_COMMENT " https://frama.link/arduino-aprs"
 #endif
 
@@ -28,7 +29,7 @@
 
 char CALL[] = "F4HVV";
 uint8_t CALL_ID = '9';
-char TO_CALL[] = "GPS";
+char TO_CALL[] = "APRS";
 uint8_t TO_CALL_ID = '0';
 char RELAYS[] = "WIDE1-1,WIDE2-2";
 
@@ -47,9 +48,15 @@ void setup() {
 #endif
     DPRINTLN(F("Starting ..."));
 
-    dra.init(TX_FREQ);
+    if (!dra.init(TX_FREQ)) {
+        CALL_ID = '7';
+    }
 
     aprs.init(CALL, CALL_ID, TO_CALL, TO_CALL_ID, RELAYS);
+
+    if (!dra.isDraDetected()) {
+        aprs.setTimeBetweenTx(TX_TIME_BETWEEN_NO_DRA);
+    }
 
     aprs.setComment(APRS_COMMENT);
 

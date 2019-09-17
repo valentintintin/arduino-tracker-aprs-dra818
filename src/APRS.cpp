@@ -27,11 +27,15 @@ bool APRS::txToRadio(String packet) {
         dra->tx();
     }
 
-    delay(500);
+    delay(1000);
+
+    DPRINTLN(F("Packet sending"));
 
     bool qaprsOk = QAPRS.sendData((char *) packet.c_str()) == QAPRSReturnOK;
 
-    delay(500);
+    DPRINTLN(F("Packet sent"));
+
+    delay(1000);
 
     digitalWrite(LED_BUILTIN, LOW);
     if (!dra->isDraDetected()) {

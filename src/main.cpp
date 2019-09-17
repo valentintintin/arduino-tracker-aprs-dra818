@@ -20,7 +20,7 @@
 #endif
 
 #define DRA_PTT 2
-#define RX_GPS 6
+#define TX_GPS 6
 #define RX_DRA 3
 #define TX_DRA 4
 #define DRA_ACTIVE 5
@@ -35,7 +35,7 @@ char RELAYS[] = "WIDE1-1,WIDE2-2";
 
 bool isTestMode = IS_TEST_MODE;
 
-GPS gps(RX_GPS);
+GPS gps(TX_GPS);
 DRA dra(RX_DRA, TX_DRA, DRA_PTT, DRA_ACTIVE);
 APRS aprs(&dra, &gps, TX_TIME_BETWEEN, TX_SPEED_DIFFERENCE, TX_LOCATION_DIFFERENCE, PTT_OUT);
 
@@ -61,16 +61,6 @@ void setup() {
     aprs.setComment(APRS_COMMENT);
 
     DPRINTLN(F("Started !"));
-
-//    if (!digitalRead(BUTTON) || IS_TEST_MODE) {
-#ifdef TEST
-    DPRINTLN(F("Test mode enabled"));
-    blink(10);
-    isTestMode = true;
-    aprs.sendPosition();
-    blink(10);
-//    }
-#endif
 }
 
 void loop() {

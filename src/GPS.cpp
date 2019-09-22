@@ -44,6 +44,8 @@ void GPS::displayInfo() {
         DPRINT(gps.altitude.meters(), 2);
         DPRINT(F(" V: "));
         DPRINT(gps.speed.kmph(), 2);
+        DPRINT(F(" D: "));
+        DPRINT(gps.course.deg());
     } else {
         DPRINT(F("Invalid"));
     }

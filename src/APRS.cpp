@@ -1,10 +1,8 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "hicpp-signed-bitwise"
 #include <ArduinoQAPRS.h>
 #include "APRS.h"
 #include "Utils.h"
 
-APRS::APRS(DRA *dra, GPS *gps, uint8_t secondBetweenTx, double speedDeltaTx, uint8_t locationMeterDeltaTx,
+APRS::APRS(DRA *dra, GPS *gps, uint16_t secondBetweenTx, uint8_t speedDeltaTx, uint16_t locationMeterDeltaTx,
            uint8_t txPin) :
         dra(dra), gps(gps), timeBetweenTx(secondBetweenTx * 1000), speedDeltaTx(speedDeltaTx),
         locationDeltaTx(locationMeterDeltaTx), txPin(txPin) {
@@ -54,15 +52,15 @@ bool APRS::txToRadio(String packet) {
     return qaprsOk;
 }
 
-void APRS::setTimeBetweenTx(uint8_t timeBetweenTx) {
+void APRS::setTimeBetweenTx(uint16_t timeBetweenTx) {
     this->timeBetweenTx = timeBetweenTx * 1000;
 }
 
-void APRS::setSpeedDeltaTx(double speedDeltaTx) {
+void APRS::setSpeedDeltaTx(uint8_t speedDeltaTx) {
     this->speedDeltaTx = speedDeltaTx;
 }
 
-void APRS::setLocationDeltaTx(double localtionDeltaTx) {
+void APRS::setLocationDeltaTx(uint16_t localtionDeltaTx) {
     this->locationDeltaTx = localtionDeltaTx;
 }
 
@@ -72,12 +70,36 @@ void APRS::setComment(String comment) {
 
 bool APRS::loop(bool test) {
     if (gps->getData() || test) {
+        /* TODO Issue #8
+         * secondsSinceBeacon = (millis() - lastTx) / 1000;
+        beaconRate;
+        cornering = false;
+        if (gps->gps.speed.kmph() < SLOW_SPEED)
+            beaconRate = SLOW_RATE;
+        else
+        {
+            if (gps->gps.speed.kmph() > FAST_SPEED)
+                beaconRate = FAST_RATE;
+            else
+                beaconRate = FAST_RATE * FAST_SPEED / gps->gps.speed.kmph();
+            turnThreshold = SLOPE / gps->gps.speed.kmph() + MIN_TURN;
+            courseChange = abs(gps->gps.course.deg() - courseAtLastBeacon);
+            if (courseChange >= 180.0)
+                courseChange = 360 - courseChange;
+            if (courseChange > turnThreshold && secondsSinceBeacon > MIN_TIME)
+                cornering = true;
+        }
+        if (secondsSinceBeacon > beaconRate || cornering)
+        {
+            cornering = false;
+            lastTx = millis();
+            courseAtLastBeacon = gps->gps.course.deg();
+*/
         if (
-//             FIXME Issue #3 loop
-//              lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx ||
+//                lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx ||
 //                (gps->gps.hdop.hdop() <= 3 &&
 //                 TinyGPSPlus::distanceBetween(lastLat, lastLng, gps->gps.location.lat(), gps->gps.location.lng()) >=
-//                 locationDeltaTx)
+//                 locationDeltaTx) ||
                 millis() - lastTx >= timeBetweenTx
                 ) {
             if (sendPosition()) {
@@ -92,7 +114,7 @@ bool APRS::loop(bool test) {
 #ifdef DEBUG
         else {
             DPRINT(F("Next : "));
-            DPRINTLN(timeBetweenTx - (millis() - lastTx));
+            DPRINTLN((uint32_t) (timeBetweenTx - (millis() - lastTx)));
         }
 #endif
         return false;
@@ -217,5 +239,3 @@ bool APRS::sendPosition() {
     buildPacket();
     return txToRadio(packetBuffer);
 }
-
-#pragma clang diagnostic pop

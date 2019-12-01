@@ -2,10 +2,7 @@
 #include "APRS.h"
 #include "Utils.h"
 
-APRS::APRS(DRA *dra, GPS *gps, uint16_t secondBetweenTx, uint8_t speedDeltaTx, uint16_t locationMeterDeltaTx,
-           uint8_t txPin) :
-        dra(dra), gps(gps), timeBetweenTx(secondBetweenTx * 1000), speedDeltaTx(speedDeltaTx),
-        locationDeltaTx(locationMeterDeltaTx), txPin(txPin) {
+APRS::APRS(DRA *dra, GPS *gps, uint8_t txPin) : dra(dra), gps(gps), txPin(txPin), lastTx(UINT64_MAX) {
     pinMode(txPin, OUTPUT);
     packetBuffer.reserve(255);
 }
@@ -52,71 +49,28 @@ bool APRS::txToRadio(String packet) {
     return qaprsOk;
 }
 
-void APRS::setTimeBetweenTx(uint16_t timeBetweenTx) {
-    this->timeBetweenTx = timeBetweenTx * 1000;
-}
-
-void APRS::setSpeedDeltaTx(uint8_t speedDeltaTx) {
-    this->speedDeltaTx = speedDeltaTx;
-}
-
-void APRS::setLocationDeltaTx(uint16_t localtionDeltaTx) {
-    this->locationDeltaTx = localtionDeltaTx;
-}
-
 void APRS::setComment(String comment) {
     this->comment = comment;
 }
 
 bool APRS::loop(bool test) {
+    DPRINT(F("Next: ")); DPRINTLN(abs(getTimeSecondsForGivenSpeed(gps->gps.speed.kmph()) - ((millis() - lastTx) / 1000)));
+
+    DPRINTLN((uint32_t) (millis() - lastTx));
+    DPRINTLN((uint32_t) 1000 * getTimeSecondsForGivenSpeed(gps->gps.speed.kmph()));
+
+#ifdef DEBUG
+    delay(1000);
+#endif
+
     if (gps->getData() || test) {
-        /* TODO Issue #8
-         * secondsSinceBeacon = (millis() - lastTx) / 1000;
-        beaconRate;
-        cornering = false;
-        if (gps->gps.speed.kmph() < SLOW_SPEED)
-            beaconRate = SLOW_RATE;
-        else
-        {
-            if (gps->gps.speed.kmph() > FAST_SPEED)
-                beaconRate = FAST_RATE;
-            else
-                beaconRate = FAST_RATE * FAST_SPEED / gps->gps.speed.kmph();
-            turnThreshold = SLOPE / gps->gps.speed.kmph() + MIN_TURN;
-            courseChange = abs(gps->gps.course.deg() - courseAtLastBeacon);
-            if (courseChange >= 180.0)
-                courseChange = 360 - courseChange;
-            if (courseChange > turnThreshold && secondsSinceBeacon > MIN_TIME)
-                cornering = true;
-        }
-        if (secondsSinceBeacon > beaconRate || cornering)
-        {
-            cornering = false;
-            lastTx = millis();
-            courseAtLastBeacon = gps->gps.course.deg();
-*/
-        if (
-//                lastSpeed - gps->gps.speed.kmph() >= speedDeltaTx ||
-//                (gps->gps.hdop.hdop() <= 3 &&
-//                 TinyGPSPlus::distanceBetween(lastLat, lastLng, gps->gps.location.lat(), gps->gps.location.lng()) >=
-//                 locationDeltaTx) ||
-                millis() - lastTx >= timeBetweenTx
-                ) {
+        if (millis() - lastTx >= (uint32_t) 1000 * getTimeSecondsForGivenSpeed(gps->gps.speed.kmph()) || test) {
             if (sendPosition()) {
                 blink(2);
-                lastSpeed = gps->gps.speed.kmph();
-                lastLat = gps->gps.location.lat();
-                lastLng = gps->gps.location.lng();
                 lastTx = millis();
                 return true;
             }
         }
-#ifdef DEBUG
-        else {
-            DPRINT(F("Next : "));
-            DPRINTLN((uint32_t) (timeBetweenTx - (millis() - lastTx)));
-        }
-#endif
         return false;
     } else {
         blink(5);
@@ -134,6 +88,16 @@ long APRS::readVccAtmega() {
     result |= ADCH << 8;
     result = 1126400L / result;  // Back-calculate AVcc in mV
     return result;
+}
+
+uint16_t APRS::getTimeSecondsForGivenSpeed(float speed) {
+    if (speed >= 20) {
+        return -0.1 * speed + 42;
+    } else if (speed >= 5) {
+        return -11 * speed + 230;
+    } else {
+        return 300;
+    }
 }
 
 float APRS::convertDegMin(float decDeg) {

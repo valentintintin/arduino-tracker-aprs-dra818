@@ -7,17 +7,11 @@
 
 class APRS {
 public:
-    APRS(DRA *dra, GPS *gps, uint16_t secondBetweenTx, uint8_t speedDeltaTx, uint16_t locationMeterDeltaTx, uint8_t txPin);
+    APRS(DRA *dra, GPS *gps, uint8_t txPin);
 
     void init(char *call, uint8_t callId, char *toCall, uint8_t toCallId, char *relays);
 
     bool loop(bool test = false);
-
-    void setTimeBetweenTx(uint16_t timeBetweenTx);
-
-    void setSpeedDeltaTx(uint8_t speedDeltaTx);
-
-    void setLocationDeltaTx(uint16_t localtionDeltaTx);
 
     void setComment(String comment);
 
@@ -30,21 +24,13 @@ private:
     GPS *gps = nullptr;
 
     uint64_t lastTx = 0;
-    double lastSpeed = 0;
-    double lastLat = 0;
-    double lastLng = 0;
-
-
     uint8_t txPin = 0;
-
-    uint16_t timeBetweenTx = 0;
-    uint16_t locationDeltaTx = 0;
-    uint8_t speedDeltaTx = 0;
 
     String packetBuffer;
     String comment;
 
     long readVccAtmega();
+    uint16_t getTimeSecondsForGivenSpeed(float speed);
     float convertDegMin(float decDeg);
 
     void stringPadding(int number, byte width, String *dest);

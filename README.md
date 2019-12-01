@@ -49,7 +49,7 @@ I use PlatformIO insted of the Arduino IDE.
 
 1. At the startup, the Arduino try to detect if there is a DRA818 module plugged. If the connexion failed, it goes to the Baofeng mode.
 *The sound (AX25) is always present on the jack connector and on Baofeng header pins. We don't have to use multiple options at the same time because sound "intensity" will decrease.*
-2. If the GPS is locked AND (time is over OR speed is over 30 Km/H OR (location is accurate AND location difference is more than 250 meters) ==> send the new location.
+2. If the GPS is locked AND time between TX is reached ==> send the new location. The time between TX is defined by the speed and two affine functions.
 
 ### Photos
 

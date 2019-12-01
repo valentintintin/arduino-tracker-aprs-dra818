@@ -9,12 +9,11 @@ bool GPS::getData() {
     DPRINTLN(F("GPS init..."));
 
     serial->begin(baud);
-    DPRINTLN(F("GPS received : "));
     uint32_t start = millis();
     do {
         while (serial->available()) {
             char r = serial->read();
-            DPRINT(r);
+            // DPRINT(r);
             gps.encode(r);
         }
     } while (millis() - start < TIME_WAIT_DATA);
@@ -22,7 +21,7 @@ bool GPS::getData() {
     serial->end();
 
     if (!gps.location.isValid()) {
-        DPRINT(F("GPS no fix, satellites : "));
+        DPRINT(F("GPS no fix, sat: "));
         DPRINTLN(gps.satellites.value());
         return false;
     }
@@ -78,5 +77,16 @@ void GPS::displayInfo() {
         DPRINT(F("Invalid"));
     }
 
+    DPRINT(F(" HDOP:"));
+    if (gps.hdop.isValid()) {
+        DPRINT(gps.hdop.hdop());
+    } else {
+        DPRINT(F("Invalid"));
+    }
+
     DPRINTLN();
+
+#ifdef DEBUG
+    delay(2000);
+#endif
 }

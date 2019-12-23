@@ -2,7 +2,7 @@
 #include "APRS.h"
 #include "Utils.h"
 
-APRS::APRS(DRA *dra, GPS *gps, uint8_t txPin) : dra(dra), gps(gps), txPin(txPin), lastTx(UINT64_MAX) {
+APRS::APRS(DRA *dra, GPS *gps, uint8_t txPin) : dra(dra), gps(gps), txPin(txPin) {
     pinMode(txPin, OUTPUT);
     packetBuffer.reserve(255);
 }
@@ -11,7 +11,7 @@ void APRS::init(char *call, uint8_t callId, char *toCall, uint8_t toCallId, char
     QAPRS.init(0, 0, call, callId, toCall, toCallId, relays);
 }
 
-bool APRS::txToRadio(String packet) {
+bool APRS::txToRadio() {
     DPRINTLN(F("TX ..."));
 
     digitalWrite(LED_BUILTIN, HIGH);
@@ -22,15 +22,15 @@ bool APRS::txToRadio(String packet) {
         dra->tx();
     }
 
-    delay(1000);
+    delay(500);
 
     DPRINTLN(F("Packet sending"));
 
-    bool qaprsOk = QAPRS.sendData((char *) packet.c_str()) == QAPRSReturnOK;
+    bool qaprsOk = QAPRS.sendData((char *) packetBuffer.c_str()) == QAPRSReturnOK;
 
     DPRINTLN(F("Packet sent"));
 
-    delay(1000);
+    delay(500);
 
     digitalWrite(LED_BUILTIN, LOW);
     if (!dra->isDraDetected()) {
@@ -53,31 +53,36 @@ void APRS::setComment(String comment) {
     this->comment = comment;
 }
 
-bool APRS::loop(bool test) {
-    DPRINT(F("Next: ")); DPRINTLN(abs(getTimeSecondsForGivenSpeed(gps->gps.speed.kmph()) - ((millis() - lastTx) / 1000)));
-
-    DPRINTLN((uint32_t) (millis() - lastTx));
-    DPRINTLN((uint32_t) 1000 * getTimeSecondsForGivenSpeed(gps->gps.speed.kmph()));
-
-#ifdef DEBUG
-    delay(1000);
-#endif
-
-    if (gps->getData() || test) {
-        if (millis() - lastTx >= (uint32_t) 1000 * getTimeSecondsForGivenSpeed(gps->gps.speed.kmph()) || test) {
+bool APRS::sendIfPossible(bool forceGps, bool forceTx) {
+    if (gps->getData() || forceGps) {
+        if (millis() - lastTx >= (uint32_t) 1000 * getTimeSecondsForGivenSpeed() || forceTx) {
             if (sendPosition()) {
                 blink(2);
                 lastTx = millis();
+                lastSpeed = gps->gps.speed.kmph();
                 return true;
             }
         }
+        blink(1);
+
+        DPRINT(F("Next: ")); DPRINT(abs(getTimeSecondsForGivenSpeed() - ((millis() - lastTx) / 1000)));
+        DPRINT(F("/")); DPRINTLN(getTimeSecondsForGivenSpeed());
+
+        #ifdef DEBUG
+            delay(1000);
+        #endif
+
         return false;
     } else {
+        lastTx = 0;
+        lastSpeed = 0;
         blink(5);
         return false;
     }
 }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "hicpp-signed-bitwise"
 long APRS::readVccAtmega() {
     long result;  // Read 1.1V reference against AVcc
     ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
@@ -89,12 +94,16 @@ long APRS::readVccAtmega() {
     result = 1126400L / result;  // Back-calculate AVcc in mV
     return result;
 }
+#pragma clang diagnostic pop
 
-uint16_t APRS::getTimeSecondsForGivenSpeed(float speed) {
+uint16_t APRS::getTimeSecondsForGivenSpeed() {
+    float speed = gps->gps.speed.kmph();
     if (speed >= 20) {
         return -0.1 * speed + 42;
     } else if (speed >= 5) {
         return -11 * speed + 230;
+    } else if (lastSpeed >= 20 || lastTx == 0) {
+        return 0;
     } else {
         return 300;
     }
@@ -103,10 +112,10 @@ uint16_t APRS::getTimeSecondsForGivenSpeed(float speed) {
 float APRS::convertDegMin(float decDeg) {
     float DegMin;
 
-    int intDeg = decDeg;               // partie entière
-    decDeg -= intDeg;                  // partie décimale
+    int intDeg = (int) decDeg;               // partie entière
+    decDeg -= (float) intDeg;                  // partie décimale
     decDeg *= 60;                      // décimale * 60
-    DegMin = (intDeg * 100) + decDeg;  // entière * 100 + décimale
+    DegMin = (float) (intDeg * 100) + decDeg;  // entière * 100 + décimale
 
     return DegMin;
 }
@@ -125,7 +134,7 @@ void APRS::stringPadding(int number, byte width, String *dest) {
 
 void APRS::stringPaddingf(float number, byte width, String *dest) {
     float temp = number;
-    if (!temp) { // NOLINT(bugprone-narrowing-conversions)
+    if (temp == 0) {
         temp++;
     }
 
@@ -136,8 +145,8 @@ void APRS::stringPaddingf(float number, byte width, String *dest) {
 }
 
 void APRS::buildPacket() {
-    float lat = gps->gps.location.lat();
-    float lng = gps->gps.location.lng();
+    auto lat = (float) gps->gps.location.lat();
+    auto lng = (float) gps->gps.location.lng();
     float latDegMin = convertDegMin(lat);
     float lngDegMin = convertDegMin(lng);
 
@@ -186,10 +195,10 @@ void APRS::buildPacket() {
     stringPadding((int) gps->gps.altitude.feet(), 6, &packetBuffer);
     // Voltage
     packetBuffer += "/V=";
-    packetBuffer += readVccAtmega() / 1000.f;
+    packetBuffer += (float) readVccAtmega() / 1000.f;
     // Accuracy
     packetBuffer += " HDOP=";
-    packetBuffer += gps->gps.hdop.hdop();
+    packetBuffer += (int) gps->gps.hdop.hdop();
     // Comment
     if (comment.length()) {
         packetBuffer += comment;
@@ -201,5 +210,5 @@ void APRS::buildPacket() {
 
 bool APRS::sendPosition() {
     buildPacket();
-    return txToRadio(packetBuffer);
+    return txToRadio();
 }

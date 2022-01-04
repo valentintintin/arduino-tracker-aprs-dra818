@@ -55,33 +55,93 @@ void APRS::setComment(String comment) {
 
 bool APRS::sendIfPossible(bool forceGps, bool forceTx) {
     if (gps->getData() || forceGps) {
-        if (millis() - lastTx >= (uint32_t) 1000 * getTimeSecondsForGivenSpeed() || forceTx) {
+        double speed = gps->gps.speed.mps();
+        double course = gps->gps.course.deg();
+        bool canTx;
+
+        DPRINT(F("LastTx : ")); DPRINTLN(lastTx);
+        DPRINT(F("LastDate : ")); DPRINTLN(lastDate);
+        DPRINT(F("LastLat : ")); DPRINTLN(lastLat, 6);
+        DPRINT(F("LastLng : ")); DPRINTLN(lastLng, 6);
+        DPRINT(F("LastSpeed : ")); DPRINTLN(lastSpeed);
+        DPRINT(F("LastCourse : ")); DPRINTLN(lastCourse);
+
+        if (lastDate == 0) {
+            DPRINTLN(F("Never TX"));
+            canTx = true;
+        } else {
+            DPRINT(F("Date : ")); DPRINTLN(gps->gps.time.value() / 100);
+            long deltaTime = (gps->gps.time.value() / 100) - lastDate;
+            bool canTx2;
+            int courseTimeMin = 15;
+            int courseDegMin = 10;
+            double turnSlope = 240;
+            double deltaCourse = fmod(course - lastCourse, 360);
+            if (deltaCourse > 180) {
+                deltaCourse = 360 - deltaCourse;
+            }
+
+            if (hasBearing() && speed > 0) {
+                if (hasBearing()) {
+                    DPRINTLN(F("Has bearing & speed"));
+                    double d2 = (double)courseDegMin + turnSlope / (2.23693629 * speed);
+                    canTx2 = deltaTime >= courseTimeMin && deltaCourse > d2;
+                } else {
+                    DPRINTLN(F("Has bearing but NO speed"));
+                    canTx2 = deltaTime >= courseTimeMin;
+                }
+            } else {
+                canTx2 = false;
+            }
+
+            if (canTx2) {
+                canTx = true;
+            } else {
+                double distanceBetween = gps->gps.distanceBetween(gps->gps.location.lat(), gps->gps.location.lng(), lastLat, lastLng);
+                DPRINT(F("Distance between : ")); DPRINTLN(distanceBetween);
+                double speedToTest = max(max(distanceBetween / (double)deltaTime, speed), lastSpeed);
+                DPRINT(F("DeltaTime : ")); DPRINTLN(deltaTime);
+                DPRINT(F("Speed to test : ")); DPRINTLN(speedToTest);
+
+                double fastSpeed = 80 / 3.6;
+                int fastRate = 30;
+                double slowSpeed = 5 / 3.6;
+                int slowRate = 1200;
+
+                if (speedToTest > slowSpeed) {
+                    slowRate = speedToTest >= fastSpeed ? fastRate : (int)((double)fastRate + (double)(slowRate - fastRate) * (fastSpeed - speedToTest) / (fastSpeed - slowSpeed));
+                }
+                DPRINT(F("DeltaTime < slowRate : ")); DPRINT(deltaTime); DPRINT(F(" >= ")); DPRINTLN(slowRate);
+                canTx = deltaTime>= (long)slowRate;
+            }
+        }
+        DPRINT(F("Can TX : ")); DPRINTLN(canTx);
+
+        if (forceTx || canTx || millis() - lastTx >= 30000) {
             if (sendPosition()) {
                 blink(2);
                 lastTx = millis();
-                lastSpeed = gps->gps.speed.kmph();
+                lastDate = gps->gps.time.value() / 100;
+                lastLat = gps->gps.location.lat();
+                lastLng = gps->gps.location.lng();
+                lastSpeed = speed;
+                lastCourse = course;
                 return true;
             }
         }
         blink(1);
 
-        DPRINT(F("Next: ")); DPRINT(abs(getTimeSecondsForGivenSpeed() - ((millis() - lastTx) / 1000)));
-        DPRINT(F("/")); DPRINTLN(getTimeSecondsForGivenSpeed());
-
-        #ifdef DEBUG
-            delay(1000);
-        #endif
+//        DPRINT(F("Next: ")); DPRINT(abs(getTimeSecondsForGivenSpeed() - ((millis() - lastTx) / 1000)));
+//        DPRINT(F("/")); DPRINTLN(getTimeSecondsForGivenSpeed());
 
         return false;
     } else {
-        lastTx = 0;
         lastSpeed = 0;
         blink(5);
         return false;
     }
 }
 
-#pragma clang diagnostic push
 #pragma ide diagnostic ignored "hicpp-signed-bitwise"
 long APRS::readVccAtmega() {
     long result;  // Read 1.1V reference against AVcc
@@ -94,30 +154,16 @@ long APRS::readVccAtmega() {
     result = 1126400L / result;  // Back-calculate AVcc in mV
     return result;
 }
-#pragma clang diagnostic pop
-
-uint16_t APRS::getTimeSecondsForGivenSpeed() {
-    float speed = gps->gps.speed.kmph();
-    if (speed >= 20) {
-        return -0.1 * speed + 42;
-    } else if (speed >= 5) {
-        return -11 * speed + 230;
-    } else if (lastSpeed >= 20 || lastTx == 0) {
-        return 0;
-    } else {
-        return 300;
-    }
-}
 
 float APRS::convertDegMin(float decDeg) {
-    float DegMin;
+    float degMin;
 
-    int intDeg = (int) decDeg;               // partie entière
-    decDeg -= (float) intDeg;                  // partie décimale
-    decDeg *= 60;                      // décimale * 60
-    DegMin = (float) (intDeg * 100) + decDeg;  // entière * 100 + décimale
+    int intDeg = (int) decDeg;                  // partie entière
+    decDeg -= (float) intDeg;                   // partie décimale
+    decDeg *= 60;                               // décimale * 60
+    degMin = (float) (intDeg * 100) + decDeg;   // entière * 100 + décimale
 
-    return DegMin;
+    return degMin;
 }
 
 void APRS::stringPadding(int number, byte width, String *dest) {
@@ -193,12 +239,14 @@ void APRS::buildPacket() {
     // Altitude
     packetBuffer += "/A=";
     stringPadding((int) gps->gps.altitude.feet(), 6, &packetBuffer);
+
     // Voltage
     packetBuffer += "/V=";
     packetBuffer += (float) readVccAtmega() / 1000.f;
     // Accuracy
     packetBuffer += " HDOP=";
     packetBuffer += (int) gps->gps.hdop.hdop();
+
     // Comment
     if (comment.length()) {
         packetBuffer += comment;
@@ -211,4 +259,8 @@ void APRS::buildPacket() {
 bool APRS::sendPosition() {
     buildPacket();
     return txToRadio();
+}
+
+bool APRS::hasBearing() {
+    return lastCourse != 0 && lastCourse != gps->gps.course.deg();
 }

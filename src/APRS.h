@@ -19,8 +19,13 @@ private:
     DRA *dra = nullptr;
     GPS *gps = nullptr;
 
-    uint8_t lastSpeed = 0;
-    uint64_t lastTx = 0;
+    double lastSpeed = 0;
+    uint32_t lastDate = 0;
+    uint32_t lastTx = 0;
+    double lastLat = 0;
+    double lastLng = 0;
+    double lastCourse = 0;
+
     uint8_t txPin = 0;
 
     String packetBuffer;
@@ -28,6 +33,7 @@ private:
 
     long readVccAtmega();
     uint16_t getTimeSecondsForGivenSpeed();
+    bool hasBearing();
 
     float convertDegMin(float decDeg);
     void stringPadding(int number, byte width, String *dest);

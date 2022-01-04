@@ -31,7 +31,6 @@ bool GPS::getData() {
     return true;
 }
 
-
 void GPS::displayInfo() {
     DPRINT(F("Sat: ")); DPRINT(gps.satellites.value());
     DPRINT(F(" HDOP: ")); DPRINTLN(gps.hdop.hdop(), 0);
@@ -42,8 +41,4 @@ void GPS::displayInfo() {
     DPRINT(F("Alt: ")); DPRINT(gps.altitude.meters(), 0);
     DPRINT(F(" Spd: ")); DPRINT(gps.speed.kmph(), 0);
     DPRINT(F(" Crs: ")); DPRINTLN(gps.course.deg(), 0);
-
-#ifdef DEBUG
-    delay(2000);
-#endif
 }

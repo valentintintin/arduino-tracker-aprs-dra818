@@ -62,8 +62,6 @@ void setup() {
     }
 #endif
 
-    DPRINT(F("Test mode: ")); DPRINTLN(isTestMode);
-
 #ifdef TX_30_S
     DPRINTLN(F("TX every 30 seconds when GPS fixed"));
 #endif
@@ -75,6 +73,12 @@ void setup() {
     aprs.init(CALL, callSsid, TO_CALL, TO_CALL_ID, RELAYS);
 
     aprs.setComment(APRS_COMMENT);
+
+    DPRINT(F("Test mode: ")); DPRINTLN(isTestMode);
+    DPRINT(F("Call: ")); DPRINT(CALL); DPRINT(F("-")); DPRINTLN(callSsid);
+    DPRINT(F("Relay: ")); DPRINTLN(RELAYS);
+    DPRINT(F("Frequency: ")); DPRINTLN(TX_FREQ);
+    DPRINT(F("Comment: ")); DPRINTLN(APRS_COMMENT);
 
     DPRINTLN(F("Started !"));
 

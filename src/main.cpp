@@ -3,7 +3,10 @@
 #include "GPS.h"
 #include "DRA.h"
 #include "APRS.h"
-#include <EasyButton.h>
+
+#ifdef USE_BUTTON
+    #include <EasyButton.h>
+#endif
 
 #ifdef CONTINUE_TX
     #include <ArduinoQAPRS.h>
@@ -36,26 +39,34 @@ bool isTestMode = IS_TEST_MODE;
 GPS gps(TX_GPS);
 DRA dra(TX_DRA, RX_DRA, DRA_PTT, DRA_ACTIVE);
 APRS aprs(&dra, &gps, PTT_OUT);
-EasyButton button(BUTTON);
+
+#ifdef USE_BUTTON
+    EasyButton button(BUTTON);
+#endif
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(BUTTON, INPUT_PULLUP);
 
-#ifdef DEBUG
     Serial.begin(115200);
-#endif
+
     DPRINTLN(F("Starting ..."));
 
+#ifdef USE_BUTTON
     button.begin();
     button.read();
 
     if (button.isPressed()) {
         isTestMode = !isTestMode;
-        DPRINT(F("Test mode: "));
-        DPRINTLN(isTestMode);
         blink(3 + isTestMode);
     }
+#endif
+
+    DPRINT(F("Test mode: ")); DPRINTLN(isTestMode);
+
+#ifdef TX_30_S
+    DPRINTLN(F("TX every 30 seconds when GPS fixed"));
+#endif
 
     if (!dra.init(TX_FREQ)) {
         callSsid = '7'; // walk
@@ -76,13 +87,17 @@ void setup() {
     }
 #endif
 
+#ifdef USE_BUTTON
     button.onPressedFor(5000, []() {
         DPRINTLN(F("TX Forced"));
         aprs.sendIfPossible(isTestMode, true);
     });
+#endif
 }
 
 void loop() {
+#ifdef USE_BUTTON
     button.read();
+#endif
     aprs.sendIfPossible(isTestMode, isTestMode);
 }

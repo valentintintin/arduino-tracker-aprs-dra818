@@ -65,12 +65,8 @@ bool APRS::sendIfPossible(bool forceGps, bool forceTx) {
         }
         blink(1);
 
-        DPRINT(F("Next: ")); DPRINT(abs(getTimeSecondsForGivenSpeed() - ((millis() - lastTx) / 1000)));
+        DPRINT(F("Next: ")); DPRINT((uint32_t) abs(getTimeSecondsForGivenSpeed() - ((millis() - lastTx) / 1000)));
         DPRINT(F("/")); DPRINTLN(getTimeSecondsForGivenSpeed());
-
-        #ifdef DEBUG
-            delay(1000);
-        #endif
 
         return false;
     } else {
@@ -97,6 +93,10 @@ long APRS::readVccAtmega() {
 #pragma clang diagnostic pop
 
 uint16_t APRS::getTimeSecondsForGivenSpeed() {
+#ifdef TX_30_S
+    return 30;
+#endif
+
     float speed = gps->gps.speed.kmph();
     if (speed >= 20) {
         return -0.1 * speed + 42;
